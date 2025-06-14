@@ -17,6 +17,7 @@ endif()
 
 # Find Python
 find_package(Python COMPONENTS Interpreter ${DEV_MODULE} REQUIRED)
+message(STATUS "Python version: ${Python_EXECUTABLE}")
 
 # Set default build type to Release if not specified
 if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -95,3 +96,13 @@ target_include_directories(concept_forge PRIVATE
 target_link_libraries(concept_forge
   PRIVATE OpenGL::GL imgui ImGuizmo glad glfw glm
 )
+
+add_custom_command(TARGET concept_forge POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_SOURCE_DIR}/python-scripts"
+    COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:concept_forge>" "${CMAKE_CURRENT_SOURCE_DIR}/python-scripts/"
+    COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/python-scripts
+            ${Python3_EXECUTABLE} -m nanobind.stubgen -m concept_forge
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/python-scripts"
+    COMMENT "Copying Python module to python-scripts/ and generating .pyi stubs"
+)
+
